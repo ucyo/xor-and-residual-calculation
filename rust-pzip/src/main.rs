@@ -3,9 +3,11 @@ use clap::{App, load_yaml};
 use byteorder::{ByteOrder, LittleEndian};
 use std::io::{Read, BufReader};
 use std::fs;
+use crate::residuals::ResidualTrait;
 
 mod shape;
 mod prediction;
+mod residuals;
 
 
 fn main() {
@@ -22,6 +24,7 @@ fn compress(matches: &clap::ArgMatches) {
     let ifile = String::from(matches.value_of("input").unwrap());
     let shape = shape::parse_shape(&matches);
     let size = (shape.x * shape.y * shape.z) as usize;
+    let cut = 31;
 
     // read f32 file
     let mut data: Vec<f32> = vec![0f32; size];
@@ -33,6 +36,9 @@ fn compress(matches: &clap::ArgMatches) {
     // map data to integer
     let data : Vec<u32> = data.iter().map(|&x| x.to_bits()).collect();
     let predictions : Vec<u32> = predictions.iter().map(|&x| x.to_bits()).collect();
+
+    // calculate residuals
+    let residuals = calculate_shifted_residuals(cut, &data, &predictions);
 }
 
 
@@ -41,4 +47,11 @@ pub fn read_f32_data(filename: String, size: usize, data: &mut [f32]) {
     let mut bytes: Vec<u8> = Vec::with_capacity(size * 4);
     BufReader::with_capacity(size * 4, file).read_to_end(&mut bytes).unwrap();
     LittleEndian::read_f32_into(&bytes, data);
+}
+
+pub fn calculate_shifted_residuals(cut: u32, data: &[u32], pred: &[u32]) -> Vec<u32> {
+    let mut rctx = residuals::RContext::new(cut);
+    let r = residuals::RShifted{};
+    let diff : Vec<u32> = data.iter().zip(pred.iter()).map(|(&t,&p)| r.residual(t, p, &mut rctx)).collect();
+    diff
 }
