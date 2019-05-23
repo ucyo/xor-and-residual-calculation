@@ -1,0 +1,24 @@
+name: pzip-cli
+version: "0.1.0"
+author: Ugur Cayoglu <cayoglu@me.com>
+about: Command line tool for pzip compression analysis
+subcommands:
+    - compress:
+            name: Compress data using algorithm from eScience 2019 paper
+            version: "0.1.0"
+            author: Ugur Cayoglu <cayoglu@me.com>
+            args:
+                - input:
+                    help: Input file
+                    short: i
+                    long: input
+                    takes_value: true
+                    required: true
+                    index: 1
+                - shape:
+                    help: Shape of the input file [z y x]
+                    short: s
+                    long: shape
+                    multiple: true
+                    takes_value: true
+                    required: true
