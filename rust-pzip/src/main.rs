@@ -5,6 +5,7 @@ use std::io::{Read, BufReader};
 use std::fs;
 
 mod shape;
+mod prediction;
 
 
 fn main() {
@@ -25,6 +26,13 @@ fn compress(matches: &clap::ArgMatches) {
     // read f32 file
     let mut data: Vec<f32> = vec![0f32; size];
     read_f32_data(ifile, size, &mut data);
+
+    // get predictions
+    let predictions = prediction::get_lorenz_predictions(&data, shape);
+
+    // map data to integer
+    let data : Vec<u32> = data.iter().map(|&x| x.to_bits()).collect();
+    let predictions : Vec<u32> = predictions.iter().map(|&x| x.to_bits()).collect();
 }
 
 
