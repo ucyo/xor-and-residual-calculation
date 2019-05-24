@@ -4,7 +4,7 @@ use clap::{App, load_yaml};
 use byteorder::{ByteOrder, LittleEndian};
 use std::io::{Read, BufReader};
 use std::fs;
-use crate::residuals::ResidualTrait;
+use crate::residuals::{ResidualTrait, RContext};
 
 mod shape;
 mod prediction;
@@ -40,12 +40,19 @@ fn compress(matches: &clap::ArgMatches) {
     let data : Vec<u32> = data.iter().map(|&x| x.to_bits()).collect();
     let predictions : Vec<u32> = predictions.iter().map(|&x| x.to_bits()).collect();
 
-    dbg!(data.into_iter().take(10).collect::<Vec<u32>>());
-    dbg!(predictions.into_iter().take(10).collect::<Vec<u32>>());
-    panic!();
+    // dbg!(data.into_iter().take(10).collect::<Vec<u32>>());
+    // dbg!(predictions.into_iter().take(10).collect::<Vec<u32>>());
+    // panic!();
 
     // calculate residuals
-    let residuals = calculate_shifted_residuals(cut, &data, &predictions);
+    let mut rctx = RContext::new(cut);
+    let r = residuals::ResidualCalculation::Shifted;
+    let residuals : Vec<u32> = data.iter().zip(predictions.iter()).map(|(&t,&p)| {
+        let result = r.residual(t, p, &mut rctx);
+        r.update(t, p, &mut rctx);
+        // dbg!(result);
+        result
+    }).collect();
 
     let fc = encode::encode_bwt_range(&residuals);
     let cr = filesize as f64 / fc.nbytes() as f64;
@@ -61,11 +68,4 @@ pub fn read_f32_data(filename: String, size: usize, data: &mut [f32]) -> usize {
     let s = BufReader::with_capacity(size * 4, file).read_to_end(&mut bytes).unwrap();
     LittleEndian::read_f32_into(&bytes, data);
     s
-}
-
-pub fn calculate_shifted_residuals(cut: u32, data: &[u32], pred: &[u32]) -> Vec<u32> {
-    let mut rctx = residuals::RContext::new(cut);
-    let r = residuals::RShifted{};
-    let diff : Vec<u32> = data.iter().zip(pred.iter()).map(|(&t,&p)| r.residual(t, p, &mut rctx)).collect();
-    diff
 }
