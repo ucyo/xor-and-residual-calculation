@@ -8,3 +8,5 @@ edition = "2018"
 clap = {version = "~2.27.0", features = ["yaml"]}
 byteorder = "1.2.7"
 bit-vec = "0.4.4"
+compress = { git = "https://github.com/ucyo/rust-compress", branch = "master" }
+pzip-bwt = { git = "https://github.com/ucyo/pzip-bwt.git", branch = "master" }

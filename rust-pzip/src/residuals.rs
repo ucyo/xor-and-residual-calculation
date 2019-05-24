@@ -58,8 +58,6 @@ fn shift_calculation(num: u32, rctx: &mut RContext) -> (bool, u32) {
     }
 }
 
-
-
 fn apply_shift(num: u32, sign: &bool, delta: &u32) -> u32 {
     if *sign {
         let result = num + *delta;

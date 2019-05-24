@@ -1,7 +1,9 @@
 use bit_vec::BitVec;
 use std::collections::HashMap;
 use std::thread;
-
+use std::io::{BufWriter, BufReader, Read, Write};
+use compress::entropy::ari;
+use pzip_bwt::{apply_bwt as abwt};
 
 pub fn encode_bwt_range(data: &[u32]) -> FileContainer {
     let mut plzc = 0i32;
@@ -16,7 +18,7 @@ pub fn encode_bwt_range(data: &[u32]) -> FileContainer {
         apply_range_coding(&lzc) // bwt_range(lzc)
     });
 
-    let mut foc = gf(&data);
+    let mut foc = get_foc(&data);
     let cfoc = foc.clone();
     // debug!("F {:?} [encoded]", foc);
     pfoc = abwt(&mut foc);
@@ -98,4 +100,38 @@ pub fn u32_to_bool(value: u32) -> Vec<bool> {
         pow >>= 1;
     }
     result
+}
+
+pub fn get_lzc(data: &[u32]) -> Vec<u8> {
+    data.iter()
+        .map(|&x| x.leading_zeros() as u8)
+        .collect::<Vec<u8>>()
+}
+
+pub fn get_foc(data: &[u32]) -> Vec<u8> {
+    data.iter().filter(|&&x| x != 0).map(|&x| _foc(x)).collect::<Vec<u8>>()
+}
+
+fn _foc(val: u32) -> u8 {
+    let mut result = 32 - val.leading_zeros();
+    let mut ix = 0;
+    while result > 0 && !((val >> ix) + 1).is_power_of_two() {
+        ix += 1;
+        result -= 1
+    }
+    result as u8
+}
+
+pub fn apply_range_coding(data: &[u8]) -> Vec<u8> {
+    let mut e = ari::ByteEncoder::new(BufWriter::new(Vec::new()));
+    e.write_all(data).unwrap();
+    let (encoded, _) = e.finish();
+    encoded.into_inner().unwrap()
+}
+
+pub fn reverse_range_coding(data: &[u8]) -> Vec<u8> {
+    let mut d = ari::ByteDecoder::new(BufReader::new(&data[..]));
+    let mut decoded = Vec::new();
+    d.read_to_end(&mut decoded).unwrap();
+    decoded
 }
