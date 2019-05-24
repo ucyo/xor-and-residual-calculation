@@ -40,6 +40,10 @@ fn compress(matches: &clap::ArgMatches) {
     let data : Vec<u32> = data.iter().map(|&x| x.to_bits()).collect();
     let predictions : Vec<u32> = predictions.iter().map(|&x| x.to_bits()).collect();
 
+    dbg!(data.into_iter().take(10).collect::<Vec<u32>>());
+    dbg!(predictions.into_iter().take(10).collect::<Vec<u32>>());
+    panic!();
+
     // calculate residuals
     let residuals = calculate_shifted_residuals(cut, &data, &predictions);
 
