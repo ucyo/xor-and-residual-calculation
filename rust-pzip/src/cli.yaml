@@ -1,4 +1,4 @@
-name: pzip-cli
+name: pzip (parallel)
 version: "0.1.0"
 author: Ugur Cayoglu <cayoglu@me.com>
 about: Command line tool for pzip compression analysis
